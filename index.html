@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Реконструкция интерфейса Telegram</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      scroll-behavior: smooth;
+      background: #f9fafb;
+      color: #1f2937;
+    }
+    section {
+      padding: 80px 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    h2, h3 {
+      scroll-margin-top: 100px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 bg-white shadow z-50">
+    <div class="max-w-6xl mx-auto flex justify-between items-center px-6 py-4">
+      <h1 class="text-xl font-bold text-sky-600">Реконструкция интерфейса</h1>
+      <nav class="space-x-4 text-gray-600 hidden md:block">
+        <a href="#desc" class="hover:text-sky-600">Описание</a>
+        <a href="#user" class="hover:text-sky-600">Пользователь</a>
+        <a href="#behavior" class="hover:text-sky-600">Модель</a>
+        <a href="#philosophy" class="hover:text-sky-600">Философия</a>
+        <a href="#conclusion" class="hover:text-sky-600">Вывод</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="text-center pt-32 pb-20 bg-gradient-to-b from-sky-50 to-white">
+    <h2 class="text-4xl font-bold mb-4">Реконструкция интерфейса мобильного приложения</h2>
+    <p class="text-lg text-gray-600">Пример: <span class="font-semibold">Telegram</span></p>
+  </section>
+
+  <!-- 1. Описание -->
+  <section id="desc">
+    <h3 class="text-2xl font-semibold mb-4">1. Описание интерфейса</h3>
+    <p class="mb-2">Главный экран — список чатов, организованный по последней активности.</p>
+    <p class="mb-2">Навигация через нижнее меню (чаты, звонки, контакты, настройки).</p>
+    <p>Цветовая палитра нейтральная, дизайн минималистичен, внимание на скорость реакции интерфейса.</p>
+  </section>
+
+  <!-- 2. Пользователь -->
+  <section id="user" class="bg-white shadow-inner rounded-2xl">
+    <h3 class="text-2xl font-semibold mb-4">2. Представления о пользователе</h3>
+    <ul class="list-disc pl-6 space-y-2">
+      <li><strong>Рационален и экономит внимание</strong> — интерфейс минималистичен, всё под рукой, без лишних стимулов.</li>
+      <li><strong>Социальное существо</strong> — ориентирован на общение, сеть контактов важнее индивидуальности.</li>
+      <li><strong>Хочет приватности, но быть услышанным</strong> — баланс между секретными чатами и публичными каналами.</li>
+      <li><strong>Мобильный и фрагментарный</strong> — короткие, быстрые взаимодействия, внимание разорвано.</li>
+    </ul>
+  </section>
+
+  <!-- 3. Поведенческая модель -->
+  <section id="behavior">
+    <h3 class="text-2xl font-semibold mb-6">3. Поведенческая модель</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full border border-gray-200 text-left text-gray-700">
+        <thead class="bg-sky-100">
+          <tr>
+            <th class="p-3 border-b">Элемент интерфейса</th>
+            <th class="p-3 border-b">Предположение о пользователе</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="hover:bg-sky-50">
+            <td class="p-3 border-b">Список чатов по активности</td>
+            <td class="p-3 border-b">Реагирует на новизну и срочность</td>
+          </tr>
+          <tr class="hover:bg-sky-50">
+            <td class="p-3 border-b">Значки “онлайн”</td>
+            <td class="p-3 border-b">Следит за активностью других</td>
+          </tr>
+          <tr class="hover:bg-sky-50">
+            <td class="p-3 border-b">Удаление сообщений</td>
+            <td class="p-3 border-b">Хочет корректировать прошлое</td>
+          </tr>
+          <tr class="hover:bg-sky-50">
+            <td class="p-3 border-b">Анимации</td>
+            <td class="p-3 border-b">Чувствителен к визуальному комфорту</td>
+          </tr>
+          <tr class="hover:bg-sky-50">
+            <td class="p-3 border-b">Автозагрузка контента</td>
+            <td class="p-3 border-b">Ленивая навигация, внимание удерживается автоматически</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4. Философская реконструкция -->
+  <section id="philosophy" class="bg-sky-50 rounded-2xl shadow-inner">
+    <h3 class="text-2xl font-semibold mb-4">4. Философская реконструкция</h3>
+    <p class="mb-4">Пользователь в Telegram — <strong>функция потока сообщений</strong>, не столько автор, сколько <strong>реактор</strong>: пересылает, комментирует, реагирует.</p>
+    <p>Интерфейс формирует новый тип субъекта: социально активного, мобильного, фрагментарного и ориентированного на быстрые действия.</p>
+  </section>
+
+  <!-- 5. Вывод -->
+  <section id="conclusion">
+    <h3 class="text-2xl font-semibold mb-4">5. Вывод</h3>
+    <p class="mb-4">Интерфейс Telegram не только отражает поведение, но и <strong>производит его</strong>, создавая модели коммуникации и самопонимания:</p>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>рациональный, но перегруженный вниманием;</li>
+      <li>социальный, но частично независимый;</li>
+      <li>ищет безопасность, но хочет видимости;</li>
+      <li>живёт в потоке, а не стабильных смыслах.</li>
+    </ul>
+  </section>
+
+  <!-- Footer -->
+  <footer class="text-center text-gray-500 py-10 text-sm">
+    © 2025 Исследование интерфейсов · Сделано с 💡 и Tailwind
+  </footer>
+</body>
+</html>
