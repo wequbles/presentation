@@ -203,7 +203,6 @@
           <p>Погрузитесь в реконструкцию UX Telegram — где минимализм, скорость и суверенность пользователя переплетаются в ощущении коммуникации без давления.</p>
           <div class="controls">
             <button class="btn" data-next="#chats">Начать реконструкцию</button>
-            <button class="btn ghost" id="introSkip">Пропустить за голое</button>
           </div>
         </div>
       </section>
@@ -311,7 +310,6 @@
           <blockquote>Каждый дизайн — это мировоззрение.<br>Telegram — это вера в человека, который умеет быть свободным.</blockquote>
           <div style="display:flex;gap:10px">
             <button class="btn" id="repeat">Пройти заново</button>
-            <button class="btn ghost" id="shareQuote">Поделиться инсайтом</button>
           </div>
         </div>
       </section>
@@ -392,6 +390,28 @@
       hint.style.top = (y+14)+'px';
       hint.style.opacity = '1';
       hint.setAttribute('aria-hidden','false');
+      // Adjust position to stay within screen bounds
+      setTimeout(() => {
+        const rect = hint.getBoundingClientRect();
+        let newX = rect.x;
+        let newY = rect.y;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        if (rect.right > windowWidth) {
+          newX = windowWidth - rect.width - 14;
+        }
+        if (rect.left < 0) {
+          newX = 14;
+        }
+        if (rect.bottom > windowHeight) {
+          newY = windowHeight - rect.height - 14;
+        }
+        if (rect.top < 0) {
+          newY = 14;
+        }
+        hint.style.left = newX + 'px';
+        hint.style.top = newY + 'px';
+      }, 0);
     }
     function hideHint(){
       hint.style.opacity = '0';
@@ -453,7 +473,7 @@
     $('#openSettings').addEventListener('click', ()=>{ $('#modalBackdrop').style.display='flex'; $('#modalBackdrop').setAttribute('aria-hidden','false'); });
     $('#closeModal').addEventListener('click', ()=>{ $('#modalBackdrop').style.display='none'; $('#modalBackdrop').setAttribute('aria-hidden','true'); });
 
-        // Channels grid population
+    // Channels grid population
     const posts = [
       {title:'Утренний дайджест',img:'https://picsum.photos/seed/1/400/300'},
       {title:'Дизайн-мышление',img:'https://picsum.photos/seed/2/400/300'},
@@ -474,30 +494,18 @@
       grid.appendChild(c);
     });
 
-
-    // share quote
-    $('#shareQuote').addEventListener('click', ()=>{
-      const text = 'Каждый дизайн — это мировоззрение. Telegram — это вера в человека.';
-      // friendly UI modal-like quick share
-      alert('Поделиться инсайтом:\n\n'+text);
-    });
-
-
     // small UX: hide hint when clicking elsewhere
     document.addEventListener('click', (e)=>{
       if(!e.target.closest('.chat-item') && !e.target.closest('.msg') && !e.target.closest('.post')) hideHint();
     });
-
 
     // small accessibility: focus outline for keyboard nav
     document.addEventListener('keydown', e=>{
       if(e.key==='Tab') document.body.classList.add('show-focus');
     });
 
-
     // initial scroll to top
     document.getElementById('intro').scrollIntoView();
-
 
   </script>
 </body>
