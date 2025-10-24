@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ru" data-theme="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Философия интерфейса Telegram — Реконструкция UX</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="11" fill="#e9f4fb" />
+            <path d="M3 12L21 3L14 21L11 14L3 12Z" fill="#2aabee" opacity="0.95"/>
+          </svg>
+        </div>
+        <div>
+          <div class="site-title">Философия интерфейса — Telegram</div>
+          <div class="site-sub" id="siteSub">Интерактивный UX-гайд</div>
+        </div>
+      </div>
+
+      <nav class="toolbar" aria-label="Основные действия">
+        <button class="btn ghost" id="replayTop">Пройти заново</button>
+
+        <button id="themeToggle" class="theme-toggle" aria-pressed="false" title="Переключить тему" aria-label="Переключить тему">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path id="themeIcon" d="M12 3a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zM12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" fill="currentColor"/></svg>
+          <span id="themeLabel">Тема</span>
+        </button>
+
+        <div class="toc" id="toc" aria-label="Оглавление"></div>
+
+        <button class="btn" id="zenBtn">Режим пустоты</button>
+      </nav>
+    </header>
+
+    <div id="progressWrap" aria-hidden="true"><div id="progressBar"></div></div>
+
+    <main id="main" role="main">
+      <!-- 1. Intro Scene -->
+      <section id="intro" class="scene">
+        <div class="intro">
+          <div class="logo big" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="11" fill="#e9f4fb" />
+              <path d="M3 12L21 3L14 21L11 14L3 12Z" fill="#2aabee" opacity="0.95"/>
+            </svg>
+          </div>
+          <h1>Что, если интерфейс не просто инструмент, а зеркало нашего отношения к свободе, скорости и контролю?</h1>
+          <p>Погрузитесь в реконструкцию UX Telegram — где минимализм, скорость и суверенность пользователя переплетаются в одном опыте.</p>
+          <div class="controls">
+            <button class="btn" data-next="#chats">Начать реконструкцию</button>
+            <button class="btn ghost" id="autoplayToggle" aria-pressed="false">Демо</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Chats View -->
+      <section id="chats" class="scene">
+        <h2>Экран диалогов</h2>
+        <p class="lead">Минимализм без навязчивости — интерфейс исчезает, чтобы не мешать содержанию.</p>
+        <div class="mock">
+          <aside class="panel" aria-label="Список чатов">
+            <div class="panel-header">
+              <strong>Чаты</strong>
+              <div>
+                <button class="btn ghost" id="openSettings" aria-haspopup="dialog">⚙️</button>
+              </div>
+            </div>
+            <div class="chat-list" id="chatList" role="list"></div>
+          </aside>
+
+          <div class="panel placeholder" id="chatsRight">Выберите диалог</div>
+        </div>
+        <div class="scene-notes">
+          <div>Пользователь — субъект, не объект алгоритма.</div>
+          <div>Нет ленты, нет давления — только выбор.</div>
+        </div>
+      </section>
+
+      <!-- 3. Chat View -->
+      <section id="chat" class="scene">
+        <h2>Экран диалога</h2>
+        <p class="lead">Интерфейс слушает — сообщения идут в ритме человека, не системы.</p>
+        <div class="mock">
+          <div class="panel chat-panel">
+            <div class="panel-header contact">
+              <div class="avatar">AB</div>
+              <div>
+                <div class="contact-name">Алексей</div>
+                <div class="contact-status">в сети</div>
+              </div>
+            </div>
+            <div class="messages" id="messages" aria-live="polite" aria-atomic="false"></div>
+          </div>
+
+          <aside class="panel interpretation">
+            <div class="interpret-title">Интерпретация</div>
+            <div class="interpret-body">Нажмите на сообщение, чтобы увидеть философский комментарий.</div>
+            <div class="interpret-actions">
+              <button class="btn" id="backToChats">Назад в чаты</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- 4. Settings -->
+      <section id="settingsScene" class="scene">
+        <h2>Настройки</h2>
+        <p class="lead">Настройка — инструмент суверенитета пользователя.</p>
+        <div class="panels">
+          <div class="panel">
+            <div class="panel-header">
+              <div style="font-weight:700">Приватность</div>
+              <div class="muted">Активна</div>
+            </div>
+            <div class="muted">Приватность — форма самоуважения.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div style="font-weight:700">Синхронизация</div>
+              <div class="muted">Включено</div>
+            </div>
+            <div class="muted">Контроль — не паранойя, а суверенитет.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Channels / Media -->
+      <section id="channels" class="scene">
+        <h2>Каналы и медиа</h2>
+        <p class="lead">Контент — посредник общения. Здесь нет сцены — только поток.</p>
+        <div class="channel-grid" id="channelGrid"></div>
+      </section>
+
+      <!-- 6. Zen Mode -->
+      <section id="zenMode" class="scene">
+        <div class="zen" id="zenBox" aria-hidden="true">
+          <div>
+            <h2>Когда исчезает интерфейс — остаётся только общение.</h2>
+            <p>Идеальный UX — тот, которого не видно.</p>
+            <div style="margin-top:12px">
+              <button class="btn ghost" id="exitZen">Вернуть интерфейс</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Reflection + feedback -->
+      <section id="reflect" class="scene">
+        <div class="reflection">
+          <blockquote>Каждый дизайн — это мировоззрение.<br>Telegram — это вера в человека, который умеет быть свободным.</blockquote>
+          <form id="feedbackForm" class="feedback" aria-label="Обратная связь">
+            <label>Ваш отзыв <textarea id="feedbackText" rows="4" placeholder="Напишите, что вы думаете..."></textarea></label>
+            <div class="feedback-actions">
+              <button class="btn" type="submit">Отправить</button>
+              <button class="btn ghost" type="button" id="clearFeedback">Очистить</button>
+            </div>
+            <div id="feedbackNotice" class="muted" aria-live="polite" style="margin-top:8px"></div>
+          </form>
+          <div class="reflection-actions">
+            <button class="btn" id="repeat">Пройти заново</button>
+            <a class="btn ghost" id="contribute" href="https://github.com/wequbles/presentation/issues/new" target="_blank" rel="noopener">Contribute</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sources -->
+      <section id="sources" class="scene">
+        <h2>Источники и ссылки</h2>
+        <ul class="sources-list">
+          <li><a href="#">Telegram Design Guidelines</a></li>
+          <li><a href="#">Material for UX thinking</a></li>
+          <li><a href="#">Research on minimal interfaces</a></li>
+        </ul>
+      </section>
+
+    </main>
+
+    <div id="hint" class="hint" role="status" aria-hidden="true" data-placement="top"></div>
+
+    <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
+        <h3 id="settingsTitle">Настройки</h3>
+        <div class="setting">
+          <div>
+            <div style="font-weight:700">Приватность</div>
+            <div class="muted">Кто видит последнее время — вы решаете.</div>
+          </div>
+          <div style="font-weight:600;color:var(--accent)">Вкл</div>
+        </div>
+        <div class="setting">
+          <div>
+            <div style="font-weight:700">Сообщения</div>
+            <div class="muted">Самоуничтожение — эфемерность в действии.</div>
+          </div>
+          <div style="font-weight:600;color:var(--accent)">Вкл</div>
+        </div>
+        <div style="margin-top:12px;text-align:right">
+          <button class="btn ghost" id="closeModal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/assets/script.js" defer></script>
+</body>
+</html>
