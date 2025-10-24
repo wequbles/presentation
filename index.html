@@ -68,7 +68,7 @@
     }
     .intro h1{margin:0;font-size:20px;color:#053441}
     .intro p{max-width:780px;color:#23414a;font-size:18px;margin:0}
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;background:var(--accent);color:white;border:none;cursor:pointer;font-weight:600;box-shadow:0 6px 18px rgba(42,171,238,0.18);}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;background:var(--accent);color:white;border:none;cursor:pointer;font-weight:600;box-shadow:0 6px 18px rgba(42,171,238,0.12)}
     .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(42,171,238,0.12)}
 
     /* Scenes controls */
@@ -92,7 +92,61 @@
     .chat-last{font-size:13px;color:#507a88}
 
     /* Tooltip hint */
-    .hint{position:fixed;background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 8px 24px rgba(6,60,80,0.08);font-size:13px;color:#0b3b46;pointer-events:none;opacity:0;transform:translateY(6px);transition:all .22s;z-index:60}
+    .hint{
+      position:fixed;
+      background:#fff;
+      border-radius:10px;
+      padding:8px 12px;
+      box-shadow:0 8px 24px rgba(6,60,80,0.08);
+      font-size:13px;
+      color:#0b3b46;
+      pointer-events:none;
+      opacity:0;
+      transform:translateY(6px);
+      transition:opacity .18s ease, transform .18s ease;
+      z-index:90;
+      max-width:300px;
+      white-space:normal;
+      line-height:1.3;
+      display:block;
+    }
+    /* arrow */
+    .hint::after{
+      content:'';
+      position:absolute;
+      width:0;height:0;
+      border-style:solid;
+      pointer-events:none;
+    }
+    /* placement variations */
+    .hint[data-placement="top"]::after{
+      bottom:-8px;
+      left:16px;
+      border-width:8px 8px 0 8px;
+      border-color:#fff transparent transparent transparent;
+      filter:drop-shadow(0 2px 4px rgba(6,60,80,0.06));
+    }
+    .hint[data-placement="bottom"]::after{
+      top:-8px;
+      left:16px;
+      border-width:0 8px 8px 8px;
+      border-color:transparent transparent #fff transparent;
+      filter:drop-shadow(0 -2px 4px rgba(6,60,80,0.06));
+    }
+    .hint[data-placement="left"]::after{
+      right:-8px;
+      top:12px;
+      border-width:8px 0 8px 8px;
+      border-color:transparent transparent transparent #fff;
+      filter:drop-shadow(-2px 0 4px rgba(6,60,80,0.06));
+    }
+    .hint[data-placement="right"]::after{
+      left:-8px;
+      top:12px;
+      border-width:8px 8px 8px 0;
+      border-color:transparent #fff transparent transparent;
+      filter:drop-shadow(2px 0 4px rgba(6,60,80,0.06));
+    }
 
     /* Right placeholder */
     .placeholder{display:flex;align-items:center;justify-content:center;color:#6b8190;font-weight:600}
@@ -200,7 +254,7 @@
             </svg>
           </div>
           <h1>Что, если интерфейс не просто инструмент, а зеркало нашего отношения к свободе, скорости и контролю?</h1>
-          <p>Погрузитесь в реконструкцию UX Telegram — где минимализм, скорость и суверенность пользователя переплетаются в ощущении коммуникации без давления.</p>
+          <p>Погрузитесь в реконструкцию UX Telegram — где минимализм, скорость и суверенность пользователя переплетаются в каждом решении.</p>
           <div class="controls">
             <button class="btn" data-next="#chats">Начать реконструкцию</button>
           </div>
@@ -252,7 +306,7 @@
 
           <div class="panel" style="display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center">
             <div style="font-weight:700;color:#08303e">Интерпретация</div>
-            <div style="font-size:14px;color:#40606b;text-align:center;max-width:260px">Нажмите на сообщение, чтобы увидеть философский комментарий о функциях.</div>
+            <div style="font-size:14px;color:#40606b;text-align:center;max-width:260px">Нажмите на сообщение, чтобы увидеть философский комментарий.</div>
             <div style="margin-top:8px">
               <button class="btn" id="backToChats">Назад в чаты</button>
             </div>
@@ -317,7 +371,7 @@
     </main>
 
     <!-- Floating hint tooltip -->
-    <div id="hint" class="hint" role="status" aria-hidden="true"></div>
+    <div id="hint" class="hint" role="status" aria-hidden="true" data-placement="top"></div>
 
     <!-- settings modal (for ⚙️) -->
     <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
@@ -382,37 +436,78 @@
       document.getElementById('intro').scrollIntoView({behavior:'smooth'});
     });
 
-    // Hint tooltip
+    // Hint tooltip — improved positioning relative to target element and arrow placement
     const hint = $('#hint');
-    function showHint(text,x,y){
+
+    function showHint(text, target){
+      // target can be an Element or a DOMRect-like object or coordinates {x,y}
+      let rect;
+      if (target instanceof Element) {
+        rect = target.getBoundingClientRect();
+      } else if (target && typeof target === 'object' && 'left' in target && 'top' in target && 'width' in target) {
+        rect = target;
+      } else if (typeof target === 'object' && 'clientX' in target && 'clientY' in target) {
+        rect = { left: target.clientX, top: target.clientY, right: target.clientX, bottom: target.clientY, width: 0, height: 0 };
+      } else {
+        // fallback: use mouse coordinates if passed as numbers
+        rect = { left: (target||0), top:  (arguments[2]||0), right: (target||0), bottom: (arguments[2]||0), width:0, height:0 };
+      }
+
       hint.textContent = text;
-      hint.style.left = (x+14)+'px';
-      hint.style.top = (y+14)+'px';
+      hint.style.left = '0px';
+      hint.style.top = '0px';
       hint.style.opacity = '1';
       hint.setAttribute('aria-hidden','false');
-      // Adjust position to stay within screen bounds
-      setTimeout(() => {
-        const rect = hint.getBoundingClientRect();
-        let newX = rect.x;
-        let newY = rect.y;
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        if (rect.right > windowWidth) {
-          newX = windowWidth - rect.width - 14;
+
+      // Give browser a tick to render and measure the tooltip
+      requestAnimationFrame(()=>{
+        const hRect = hint.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Decide placement by available space
+        const spaceAbove = rect.top;
+        const spaceBelow = vh - rect.bottom;
+        const spaceLeft = rect.left;
+        const spaceRight = vw - rect.right;
+
+        let placement = 'top';
+        if (spaceBelow > hRect.height + 16) placement = 'bottom';
+        else if (spaceAbove > hRect.height + 16) placement = 'top';
+        else if (spaceRight > hRect.width + 16) placement = 'right';
+        else if (spaceLeft > hRect.width + 16) placement = 'left';
+        else placement = (spaceBelow >= spaceAbove) ? 'bottom' : 'top';
+
+        let left=0, top=0;
+
+        if (placement === 'top') {
+          top = rect.top - hRect.height - 12;
+          left = rect.left + (rect.width/2) - (hRect.width/2);
+        } else if (placement === 'bottom') {
+          top = rect.bottom + 12;
+          left = rect.left + (rect.width/2) - (hRect.width/2);
+        } else if (placement === 'left') {
+          left = rect.left - hRect.width - 12;
+          top = rect.top + (rect.height/2) - (hRect.height/2);
+        } else { // right
+          left = rect.right + 12;
+          top = rect.top + (rect.height/2) - (hRect.height/2);
         }
-        if (rect.left < 0) {
-          newX = 14;
-        }
-        if (rect.bottom > windowHeight) {
-          newY = windowHeight - rect.height - 14;
-        }
-        if (rect.top < 0) {
-          newY = 14;
-        }
-        hint.style.left = newX + 'px';
-        hint.style.top = newY + 'px';
-      }, 0);
+
+        // Keep tooltip inside viewport with small margin
+        const margin = 8;
+        if (left < margin) left = margin;
+        if (left + hRect.width > vw - margin) left = vw - hRect.width - margin;
+        if (top < margin) top = margin;
+        if (top + hRect.height > vh - margin) top = vh - hRect.height - margin;
+
+        hint.style.left = Math.round(left) + 'px';
+        hint.style.top = Math.round(top) + 'px';
+        hint.setAttribute('data-placement', placement);
+        hint.style.transform = 'translateY(0)';
+      });
     }
+
     function hideHint(){
       hint.style.opacity = '0';
       hint.setAttribute('aria-hidden','true');
@@ -431,7 +526,7 @@
       const el = document.createElement('div'); el.className='chat-item'; el.dataset.hint='Минимализм без навязчивости — интерфейс исчезает, чтобы не мешать содержанию.';
       el.innerHTML = `<div class="avatar">${c.name.slice(0,2)}</div><div class="chat-meta"><div class="chat-name">${c.name}</div><div class="chat-last">${c.last}</div></div>`;
       el.addEventListener('mouseenter', e=>{
-        const rect = el.getBoundingClientRect(); showHint(el.dataset.hint,rect.right,rect.top);
+        showHint(el.dataset.hint, el);
       });
       el.addEventListener('mouseleave', hideHint);
       el.addEventListener('click', ()=>{
@@ -454,9 +549,13 @@
       msgs.forEach(m=>{
         const d = document.createElement('div'); d.className='msg '+(m.who==='me'?'me':'them')+' small'; d.textContent = m.text;
         d.dataset.note = m.note;
+        d.addEventListener('mouseenter',(e)=>{
+          showHint(d.dataset.note, d);
+        });
+        d.addEventListener('mouseleave', hideHint);
         d.addEventListener('click',(e)=>{
-          // show tooltip near message
-          const r = d.getBoundingClientRect(); showHint(d.dataset.note, r.right, r.top);
+          // also show on click near the element (keeps same behavior)
+          showHint(d.dataset.note, d);
           // dismiss after 3s
           setTimeout(hideHint,3000);
         });
@@ -483,9 +582,9 @@
     const grid = $('#channelGrid');
     posts.forEach(p=>{
       const c = document.createElement('div'); c.className='post';
-      c.innerHTML = `<div style="font-weight:700">${p.title}</div><img src="${p.img}" alt="${p.title}"><div class="meta">Контент как посредник общения</div><div style="margin-top:auto;display:flex;justify-content:flex-end"><button class="btn ghost openPost">Открыть</button></div>`;
+      c.innerHTML = `<div style="font-weight:700">${p.title}</div><img src="${p.img}" alt="${p.title}"><div class="meta">Контент как посредник общения</div><div style="margin-top:6px"><button class="btn ghost openPost">Открыть</button></div>`;
       c.addEventListener('mouseenter',e=>{
-        showHint('Контент не цель — он посредник общения.',e.clientX,e.clientY);
+        showHint('Контент не цель — он посредник общения.', c);
       });
       c.addEventListener('mouseleave',hideHint);
       c.querySelector('.openPost').addEventListener('click',()=>{
