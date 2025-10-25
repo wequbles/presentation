@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="ru" data-theme="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Философия интерфейса Telegram — Реконструкция UX</title>
+
+  <style>
+    /* Theme variables and accessible tuning */
+    :root{
+      --bg: #ffffff;
+      --page-gradient-top: var(--bg);
+      --page-gradient-bottom: #f6fbff;
+      --soft: #e9f4fb;
+      --muted: #6ea5bf;
+      --accent: #2aabee; /* AA ok with dark text (≈6.23) */
+      --accent-strong: #0f86c2;
+      --glass: rgba(255,255,255,0.7);
+      --card-shadow: 0 8px 24px rgba(42,171,238,0.08);
+      --radius: 16px;
+      --maxw: 1100px;
+      --font-sans: "Inter", Roboto, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
+
+      /* text */
+      --text: #06282f;
+      --muted-text: #507a88;
+
+      /* panels / hints */
+      --panel-bg: rgba(255,255,255,0.9);
+      --panel-strong: #ffffff;
+      --hint-bg: #ffffff;
+      --hint-shadow: 0 8px 24px rgba(6,60,80,0.08);
+      --focus-ring: rgba(42,171,238,0.18);
+
+      /* message bubble defaults (light theme) */
+      --msg-them-bg: #ffffff;
+      --msg-them-text: #06282f;
+      --msg-me-bg: linear-gradient(180deg,#e8f9ff,#dff5fb);
+    }
+
+    /* Dark theme overrides */
+    [data-theme="dark"]{
+      --bg: #06161b;
+      --page-gradient-top: #041218;
+      --page-gradient-bottom: #071e26;
+      --soft: rgba(20,56,66,0.7);
+      --muted: #48869c;
+      --accent: #3fc4ff;
+      --accent-strong: #60bfff;
+      --glass: rgba(10,20,24,0.6);
+      --card-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      --radius: 12px;
+
+      --text: #d7eef8;
+      --muted-text: #9cc6d6;
+
+      --panel-bg: rgba(6,22,28,0.6);
+      --panel-strong: rgba(8,28,36,0.9);
+      --hint-bg: #052027;
+      --hint-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      --focus-ring: rgba(63,196,255,0.22);
+
+      /* message bubble in dark theme:
+         we explicitly set a dark bubble background and light text (good contrast, ≈12.5) */
+      --msg-them-bg: #0b2a30;
+      --msg-them-text: #d7eef8;
+      --msg-me-bg: linear-gradient(180deg,#0f3f4a,#08323a);
+    }
+
+    @media (prefers-reduced-motion: reduce) { :root { --anim-duration: 0ms; } }
+    :root { --anim-duration: 180ms; }
+
+    html,body{height:100%;}
+    html{scroll-behavior:smooth;}
+    body{
+      margin:0;
+      font-family:var(--font-sans);
+      background: linear-gradient(180deg,var(--page-gradient-top) 0%, var(--page-gradient-bottom) 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      display:flex;
+      justify-content:center;
+      padding:28px 10px;
+      transition:background var(--anim-duration) ease,color var(--anim-duration) ease;
+    }
+
+    .wrap{ width:100%; max-width:var(--maxw); }
+
+    header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{ width:56px;height:56px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;box-shadow:var(--card-shadow); transition:box-shadow var(--anim-duration) ease, background var(--anim-duration) ease; }
+    .site-title{font-weight:700;font-size:18px;color:var(--text)}
+
+    .toolbar{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+    .theme-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:transparent;border:1px solid rgba(0,0,0,0.04);color:var(--muted-text);cursor:pointer}
+    .theme-toggle svg{width:16px;height:16px}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;background:var(--accent);color:#04222b;border:none;cursor:pointer;font-weight:700;box-shadow:0 6px 18px rgba(42,171,238,0.14);transition:transform .12s ease, box-shadow .12s ease, background var(--anim-duration) ease}
+    .btn:active{transform:translateY(1px)}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(42,171,238,0.12)}
+
+    .show-focus :focus{outline:3px solid var(--focus-ring);outline-offset:3px;border-radius:8px}
+
+    main{display:block}
+    section.scene{
+      min-height:56vh;
+      margin:20px 0;
+      padding:18px;
+      border-radius:var(--radius);
+      background:var(--panel-bg);
+      box-shadow:var(--card-shadow);
+      position:relative;
+      overflow:hidden;
+      transition:opacity var(--anim-duration) ease, background var(--anim-duration) ease, transform var(--anim-duration) ease;
+    }
+
+    .scene h2{margin:0 0 6px;font-size:18px}
+    .scene .scene-desc{margin:0 0 12px;color:var(--muted-text);font-size:14px}
+
+    .intro{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:36px 12px}
+    .intro h1{margin:0;font-size:20px;color:var(--text)}
+    .intro p{max-width:760px;color:var(--muted-text);font-size:15px;margin:0}
+
+    .controls{display:flex;gap:12px;justify-content:center;margin-top:12px}
+
+    .mock{display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start}
+    .panel{background:var(--panel-strong);border-radius:12px;padding:12px;box-shadow:var(--card-shadow);backdrop-filter: blur(4px); transition:box-shadow var(--anim-duration), transform var(--anim-duration)}
+
+    .chat-list{max-height:56vh;overflow:auto;padding:6px}
+    .chat-item{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;cursor:pointer;transition:background var(--anim-duration), box-shadow var(--anim-duration), transform var(--anim-duration)}
+    .chat-item:hover{background:linear-gradient(90deg, rgba(42,171,238,0.04), rgba(42,171,238,0.02))}
+    .chat-item.selected{background:linear-gradient(90deg, rgba(42,171,238,0.08), rgba(42,171,238,0.03)); box-shadow:0 14px 40px rgba(10,30,50,0.08); transform:translateY(-2px); border-left:4px solid var(--accent-strong); padding-left:8px}
+    .avatar{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--soft),#dff4ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#065}
+    .chat-meta{flex:1}
+    .chat-name{font-weight:700}
+    .chat-last{font-size:13px;color:var(--muted-text)}
+
+    .messages{display:flex;flex-direction:column;gap:12px;height:56vh;max-height:56vh;overflow:auto;padding:12px}
+    .msg{max-width:70%;padding:10px 14px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.03);cursor:default}
+    .msg.me{align-self:flex-end;background:var(--msg-me-bg); color:var(--msg-me-text, var(--text))}
+    .msg.them{align-self:flex-start;background:var(--msg-them-bg); color:var(--msg-them-text); border:1px solid rgba(0,0,0,0.02)}
+
+    /* Tooltip */
+    .hint{position:fixed;background:var(--hint-bg);border-radius:10px;padding:8px 12px;box-shadow:var(--hint-shadow);font-size:13px;color:var(--text);pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity var(--anim-duration) ease, transform var(--anim-duration) ease;z-index:90;max-width:300px;white-space:normal;line-height:1.3;display:block}
+    .hint::after{content:'';position:absolute;width:0;height:0;border-style:solid;pointer-events:none}
+    .hint[data-placement="top"]::after{bottom:-8px;left:16px;border-width:8px 8px 0 8px;border-color:var(--hint-bg) transparent transparent transparent}
+    .hint[data-placement="bottom"]::after{top:-8px;left:16px;border-width:0 8px 8px 8px;border-color:transparent transparent var(--hint-bg) transparent}
+
+    /* modal */
+    .modal-backdrop{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(6,28,38,0.35);display:none;align-items:center;justify-content:center;z-index:120;transition:opacity var(--anim-duration) ease}
+    .modal-backdrop.active{display:flex;opacity:1}
+    .modal{background:var(--panel-strong);padding:16px;border-radius:12px;max-width:520px;width:92%;box-shadow:0 18px 60px rgba(3,22,38,0.18);transform:translateY(12px) scale(.98);opacity:0;transition:transform var(--anim-duration) ease, opacity var(--anim-duration) ease}
+    .modal-backdrop.active .modal{transform:translateY(0) scale(1);opacity:1}
+
+    /* channels / posts */
+    .channel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .post{position:relative;overflow:hidden;border-radius:12px;padding:12px;background:var(--panel-strong);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:8px;transition:transform .18s ease, box-shadow .18s ease}
+    .post::before{content:'';position:absolute;left:0;right:0;top:0;height:50%;background:linear-gradient(180deg, rgba(42,171,238,0.06), rgba(255,255,255,0));opacity:0;transition:opacity .18s ease}
+    .post img{width:100%;height:110px;object-fit:cover;border-radius:8px}
+    .post .meta{font-size:13px;color:var(--muted-text)}
+    .post:hover{transform:translateY(-6px);box-shadow:0 18px 50px rgba(10,30,50,0.08)}
+    .post:hover::before{opacity:1}
+
+    /* reflection */
+    .reflection{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 12px}
+    .reflection blockquote{font-size:20px;line-height:1.4;margin:0;color:var(--text);font-weight:600}
+
+    /* small responsive */
+    @media (max-width:880px){
+      .mock{grid-template-columns:1fr}
+      .logo{width:48px;height:48px}
+      .intro p{font-size:15px}
+      .chat-list{max-height:40vh}
+      .messages{height:40vh;max-height:40vh}
+      section.scene{padding:14px}
+    }
+    @media (max-width:600px){
+      body{padding:18px 8px}
+      .site-title{font-size:16px}
+      .btn{padding:10px 14px}
+      .post img{height:140px}
+      .panel{padding:10px}
+      .chat-item{padding:10px}
+      .messages{height:36vh;max-height:36vh}
+      .chat-list{max-height:36vh}
+    }
+
+    /* utilities */
+    .toolbar .theme-toggle{border:1px solid rgba(0,0,0,0.04)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="11" fill="#e9f4fb" />
+            <path d="M3 12L21 3L14 21L11 14L3 12Z" fill="#2aabee" opacity="0.95"/>
+          </svg>
+        </div>
+        <div>
+          <div class="site-title">Философия интерфейса — Telegram</div>
+          <div style="font-size:12px;color:var(--muted-text)">Интерактивный UX-гайд</div>
+        </div>
+      </div>
+
+      <div class="toolbar" role="toolbar" aria-label="Панель действий">
+        <button class="btn ghost" id="replayTop">Пройти заново</button>
+
+        <button id="themeToggle" class="theme-toggle" aria-pressed="false" title="Переключить тему" aria-label="Переключить тему">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path id="themeIcon" d="M12 3a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zM12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" fill="currentColor"/>
+          </svg>
+          <span id="themeLabel" style="font-size:13px;color:var(--muted-text)">Тема</span>
+        </button>
+
+        <button class="btn" id="zenBtn">Режим пустоты</button>
+      </div>
+    </header>
+
+    <main role="main">
+      <section id="intro" class="scene" aria-label="Вступление">
+        <h2>Введение</h2>
+        <p class="scene-desc">Краткое объяснение: зачем реконструкция UX Telegram и что мы собираемся изучить.</p>
+        <div class="intro">
+          <div class="logo" style="width:88px;height:88px;border-radius:18px;">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="12" cy="12" r="11" fill="#e9f4fb" />
+              <path d="M3 12L21 3L14 21L11 14L3 12Z" fill="#2aabee" opacity="0.95"/>
+            </svg>
+          </div>
+          <h1>Что, если интерфейс не просто инструмент, а зеркало нашего отношения к свободе, скорости и контролю?</h1>
+          <p>Погрузитесь в реконструкцию UX Telegram — где минимализм, скорость и суверенность пользователя переплетаются в одном опыте.</p>
+          <div class="controls">
+            <button class="btn" data-next="#chats">Начать реконструкцию</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="chats" class="scene" aria-label="Экран диалогов">
+        <h2>Экран диалогов</h2>
+        <p class="scene-desc">Обзорная сцена: структура чатов, приоритеты, и почему список должен быть ненавязчивым.</p>
+
+        <div class="mock" style="margin-top:12px">
+          <div class="panel" aria-hidden="false">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <strong>Чаты</strong>
+              <button class="btn ghost" id="openSettings" aria-haspopup="dialog" aria-controls="modalBackdrop">⚙️</button>
+            </div>
+            <div class="chat-list" id="chatList" role="list" aria-label="Список чатов"></div>
+          </div>
+
+          <div class="panel placeholder" id="chatsRight" role="region" aria-label="Панель выбора">
+            <div style="font-weight:700;margin-bottom:8px">Выберите диалог</div>
+            <div style="color:var(--muted-text)">Нажмите на элемент в списке слева, чтобы открыть диалог и увидеть интерпретацию.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;color:var(--text);display:flex;gap:14px;flex-wrap:wrap">
+          <div>Пользователь — субъект, не объект алгоритма.</div>
+          <div>Нет ленты, нет давления — только выбор.</div>
+        </div>
+      </section>
+
+      <section id="chat" class="scene" aria-label="Экран диалога">
+        <h2>Экран диалога</h2>
+        <p class="scene-desc">Диалоги — ритм человека, а не системы; как дизайн поддерживает это</p>
+
+        <div class="mock" style="margin-top:12px">
+          <div class="panel chat-panel" style="padding:10px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+              <div class="avatar">AB</div>
+              <div>
+                <div style="font-weight:700">Алексей</div>
+                <div style="font-size:13px;color:var(--muted-text)">в сети</div>
+              </div>
+            </div>
+            <div class="messages" id="messages" aria-live="polite" aria-atomic="false"></div>
+          </div>
+
+          <div class="panel" style="display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center">
+            <div style="font-weight:700;color:var(--text)">Интерпретация</div>
+            <div style="font-size:14px;color:var(--muted-text);text-align:center;max-width:260px">Нажмите на сообщение, чтобы увидеть философский комментарий.</div>
+            <div style="margin-top:8px">
+              <button class="btn" id="backToChats">Назад в чаты</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settingsScene" class="scene" aria-label="Настройки">
+        <h2>Настройки</h2>
+        <p class="scene-desc">Пользователь контролирует приватность и синхронизацию — дизайн как инструмент суверенитета.</p>
+        <div style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap">
+          <div class="panel" style="flex:1;min-width:220px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-weight:700">Приватность</div>
+              <div style="color:var(--muted-text)">Активна</div>
+            </div>
+            <div style="font-size:14px;color:var(--muted-text)">Приватность — форма самоуважения.</div>
+          </div>
+
+          <div class="panel" style="flex:1;min-width:220px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-weight:700">Синхронизация</div>
+              <div style="color:var(--muted-text)">Включено</div>
+            </div>
+            <div style="font-size:14px;color:var(--muted-text)">Контроль — не паранойя, а суверенитет.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="channels" class="scene" aria-label="Каналы и медиа">
+        <h2>Каналы и медиа</h2>
+        <p class="scene-desc">Поток контента как посредник общения — как формат влияет на восприятие.</p>
+        <div style="margin-top:12px" class="channel-grid" id="channelGrid"></div>
+      </section>
+
+      <section id="zenMode" class="scene" aria-label="Режим пустоты">
+        <h2>Режим пустоты</h2>
+        <p class="scene-desc">Эксперимент: убрать интерфейс до минимума и проверить взаимодействие.</p>
+        <div class="zen" id="zenBox" aria-hidden="true">
+          <div>
+            <h2>Когда исчезает интерфейс — остаётся только общение.</h2>
+            <p>Идеальный UX — тот, которого не видно.</p>
+            <div style="margin-top:12px">
+              <button class="btn ghost" id="exitZen">Вернуть интерфейс</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="reflect" class="scene" aria-label="Рефлексия">
+        <h2>Рефлексия</h2>
+        <p class="scene-desc">Короткие вопросы для самоанализа и форма для быстрого отзыва.</p>
+        <div class="reflection">
+          <blockquote>Каждый дизайн — это мировоззрение.<br>Telegram — это вера в человека, который умеет быть свободным.</blockquote>
+          <div style="max-width:760px;color:var(--muted-text);text-align:center">Подумайте: какие паттерны вы поддерживаете в своём продукте? Что можно упростить, не потеряв контроль?</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn" id="repeat">Пройти заново</button>
+            <button class="btn ghost" id="shareThoughts">Поделиться мыслью</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="hint" class="hint" role="status" aria-hidden="true" data-placement="top"></div>
+
+    <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
+        <h3 id="settingsTitle">Настройки</h3>
+        <div class="setting">
+          <div>
+            <div style="font-weight:700">Приватность</div>
+            <div style="font-size:13px;color:var(--muted-text)">Кто видит последнее время — вы решаете.</div>
+          </div>
+          <div style="font-weight:600;color:var(--accent)">Вкл</div>
+        </div>
+        <div class="setting">
+          <div>
+            <div style="font-weight:700">Сообщения</div>
+            <div style="font-size:13px;color:var(--muted-text)">Самоуничтожение — эфемерность в действии.</div>
+          </div>
+          <div style="font-weight:600;color:var(--accent)">Вкл</div>
+        </div>
+        <div style="margin-top:12px;text-align:right">
+          <button class="btn ghost" id="closeModal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="sharePopup" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:140;background:var(--panel-strong);padding:12px;border-radius:10px;box-shadow:0 18px 60px rgba(3,22,38,0.18);width:clamp(280px,40%,520px)">
+      <div style="font-weight:700;margin-bottom:8px">Поделиться мыслью</div>
+      <textarea id="shareText" rows="4" style="width:100%;border-radius:8px;padding:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;color:var(--text)"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+        <button class="btn ghost" id="cancelShare">Отмена</button>
+        <button class="btn" id="sendShare">Отправить</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const $ = (q,ctx=document)=>ctx.querySelector(q);
+    const $$ = (q,ctx=document)=>Array.from(ctx.querySelectorAll(q));
+
+    /* Theme init */
+    (function initTheme(){
+      const root = document.documentElement;
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if(stored === 'dark' || (!stored && prefersDark)) {
+        root.setAttribute('data-theme','dark');
+        $('#themeToggle')?.setAttribute('aria-pressed','true');
+        $('#themeLabel') && ($('#themeLabel').textContent = 'Тёмная');
+      } else {
+        root.removeAttribute('data-theme');
+        $('#themeToggle')?.setAttribute('aria-pressed','false');
+        $('#themeLabel') && ($('#themeLabel').textContent = 'Светлая');
+      }
+    })();
+
+    $('#themeToggle')?.addEventListener('click', ()=>{
+      const root = document.documentElement;
+      const isDark = root.getAttribute('data-theme') === 'dark';
+      if(isDark){
+        root.removeAttribute('data-theme');
+        localStorage.setItem('theme','light');
+        $('#themeToggle').setAttribute('aria-pressed','false');
+        $('#themeLabel').textContent = 'Светлая';
+      } else {
+        root.setAttribute('data-theme','dark');
+        localStorage.setItem('theme','dark');
+        $('#themeToggle').setAttribute('aria-pressed','true');
+        $('#themeLabel').textContent = 'Тёмная';
+      }
+      const icon = document.getElementById('themeIcon');
+      if(icon) icon.setAttribute('d', isDark ? "M12 3a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zM12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" : "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z");
+    });
+
+    /* Scene navigation */
+    document.querySelectorAll('[data-next]').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        const sel = btn.getAttribute('data-next');
+        const dest = document.querySelector(sel);
+        if(dest) dest.scrollIntoView({behavior:'smooth',block:'center'});
+      });
+    });
+
+    $('#replayTop')?.addEventListener('click', ()=>{ const intro=document.getElementById('intro'); if(intro) intro.scrollIntoView({behavior:'smooth'}); });
+    $('#repeat')?.addEventListener('click', ()=>{ const intro=document.getElementById('intro'); if(intro) intro.scrollIntoView({behavior:'smooth'}); });
+
+    /* Zen */
+    const zenBox = $('#zenBox');
+    $('#zenBtn')?.addEventListener('click', ()=>{
+      if(zenBox){
+        zenBox.classList.add('visible');
+        zenBox.setAttribute('aria-hidden','false');
+        const z = document.getElementById('zenMode');
+        if(z) z.scrollIntoView({behavior:'smooth',block:'center'});
+        document.querySelectorAll('main > section:not(#zenMode)').forEach(s=>s.style.opacity='0.08');
+      }
+    });
+    $('#exitZen')?.addEventListener('click', ()=>{ if(zenBox){ zenBox.classList.remove('visible'); zenBox.setAttribute('aria-hidden','true'); document.querySelectorAll('main > section').forEach(s=>s.style.opacity='1'); const intro=document.getElementById('intro'); if(intro) intro.scrollIntoView({behavior:'smooth'}); } });
+
+    /* Tooltip */
+    const hint = $('#hint');
+    function showHint(text,target){
+      if(!hint) return;
+      let rect;
+      if (target instanceof Element) rect = target.getBoundingClientRect();
+      else rect = { left: (target||0), top: (arguments[2]||0), right:(target||0), bottom:(arguments[2]||0), width:0, height:0 };
+      hint.textContent = text;
+      hint.style.left = '0px'; hint.style.top='0px'; hint.style.opacity='1'; hint.setAttribute('aria-hidden','false');
+      requestAnimationFrame(()=>{
+        const hRect = hint.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+        const spaceAbove=rect.top, spaceBelow=vh-rect.bottom, spaceLeft=rect.left, spaceRight=vw-rect.right;
+        let placement='top';
+        if(spaceBelow > hRect.height + 16) placement='bottom';
+        else if(spaceAbove > hRect.height + 16) placement='top';
+        else if(spaceRight > hRect.width + 16) placement='right';
+        else if(spaceLeft > hRect.width + 16) placement='left';
+        else placement = (spaceBelow >= spaceAbove) ? 'bottom':'top';
+        let left=0, top=0;
+        if(placement==='top'){ top = rect.top - hRect.height - 12; left = rect.left + (rect.width/2) - (hRect.width/2); }
+        else if(placement==='bottom'){ top = rect.bottom + 12; left = rect.left + (rect.width/2) - (hRect.width/2); }
+        else if(placement==='left'){ left = rect.left - hRect.width - 12; top = rect.top + (rect.height/2) - (hRect.height/2); }
+        else { left = rect.right + 12; top = rect.top + (rect.height/2) - (hRect.height/2); }
+        const margin=8;
+        if(left < margin) left = margin;
+        if(left + hRect.width > vw - margin) left = vw - hRect.width - margin;
+        if(top < margin) top = margin;
+        if(top + hRect.height > vh - margin) top = vh - hRect.height - margin;
+        hint.style.left = Math.round(left) + 'px';
+        hint.style.top = Math.round(top) + 'px';
+        hint.setAttribute('data-placement', placement);
+        hint.style.transform = 'translateY(0)';
+      });
+    }
+    function hideHint(){ if(!hint) return; hint.style.opacity='0'; hint.setAttribute('aria-hidden','true'); }
+    window.addEventListener('resize', ()=>{ if(hint && hint.getAttribute('aria-hidden')==='false') hideHint(); });
+    window.addEventListener('scroll', ()=>{ if(hint && hint.getAttribute('aria-hidden')==='false') hideHint(); }, {passive:true});
+
+    /* Chat list creation + selection highlight */
+    const chats = [
+      {name:'Алиса',last:'Присылаю фото',id:'c1'},
+      {name:'Бизнес',last:'Новое обновление',id:'c2'},
+      {name:'Дизайн',last:'Может сделаем так?',id:'c3'},
+      {name:'Паблик',last:'Сегодня в 19:00',id:'c4'},
+      {name:'Ксюша',last:'😂😂😂',id:'c5'},
+    ];
+    const chatList = $('#chatList');
+    let selectedChatId = null;
+    chats.forEach(c=>{
+      const el = document.createElement('div');
+      el.className = 'chat-item';
+      el.setAttribute('role','listitem');
+      el.setAttribute('tabindex','0');
+      el.dataset.id = c.id;
+      el.dataset.hint = 'Минимализм без навязчивости — интерфейс исчезает, чтобы не мешать содержанию.';
+
+      const av = document.createElement('div'); av.className='avatar'; av.textContent = c.name.slice(0,2);
+      const meta = document.createElement('div'); meta.className='chat-meta';
+      const title = document.createElement('div'); title.className='chat-name'; title.textContent = c.name;
+      const last = document.createElement('div'); last.className='chat-last'; last.textContent = c.last;
+      meta.appendChild(title); meta.appendChild(last);
+      el.appendChild(av); el.appendChild(meta);
+
+      el.addEventListener('mouseenter', ()=> showHint(el.dataset.hint, el));
+      el.addEventListener('mouseleave', hideHint);
+      el.addEventListener('click', ()=> {
+        selectChat(c.id, el);
+        const chatSection = document.getElementById('chat'); if(chatSection) chatSection.scrollIntoView({behavior:'smooth',block:'center'});
+        populateMessages(c);
+      });
+      el.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); } });
+
+      chatList.appendChild(el);
+    });
+
+    function selectChat(id, el){
+      if(selectedChatId === id) return;
+      selectedChatId = id;
+      document.querySelectorAll('.chat-item').forEach(node => node.classList.remove('selected'));
+      if(el) el.classList.add('selected');
+    }
+
+    /* Messages */
+    function populateMessages(chat){
+      const msgs = [
+        {who:'them',text:'Привет! Как дела? 😊',note:'Интерфейс не диктует — он слушает.'},
+        {who:'me',text:'Всё отлично, работаю над проектом.',note:'Самоуничтожение — форма эфемерности.'},
+        {who:'them',text:'Отправляю стикер',note:'Стикеры — эмоциональный язык.'},
+        {who:'me',text:'Фото ниже',note:'Удалить для всех — власть над временем.'},
+      ];
+      const container = $('#messages'); container.innerHTML = '';
+      msgs.forEach(m=>{
+        const d = document.createElement('div');
+        d.className = 'msg ' + (m.who==='me' ? 'me' : 'them') + ' small';
+        d.textContent = m.text;
+        d.dataset.note = m.note;
+        d.setAttribute('tabindex','0');
+        d.addEventListener('mouseenter', ()=> showHint(d.dataset.note, d));
+        d.addEventListener('mouseleave', hideHint);
+        d.addEventListener('click', ()=> { showHint(d.dataset.note, d); setTimeout(hideHint, 3000); });
+        d.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); d.click(); } });
+        container.appendChild(d);
+      });
+      setTimeout(()=>{ container.scrollTop = container.scrollHeight; }, 120);
+    }
+
+    /* Modal open/close with animation */
+    const modalBackdrop = $('#modalBackdrop');
+    const modal = modalBackdrop ? modalBackdrop.querySelector('.modal') : null;
+    $('#openSettings')?.addEventListener('click', ()=>{
+      if(!modalBackdrop) return;
+      modalBackdrop.classList.add('active');
+      modalBackdrop.setAttribute('aria-hidden','false');
+      setTimeout(()=>{ if(modal) modal.focus(); }, 200);
+    });
+    function closeModal(){ if(!modalBackdrop) return; modalBackdrop.classList.remove('active'); modalBackdrop.setAttribute('aria-hidden','true'); }
+    $('#closeModal')?.addEventListener('click', closeModal);
+    modalBackdrop?.addEventListener('click', (e)=> { if(e.target === modalBackdrop) closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ if(modalBackdrop && modalBackdrop.classList.contains('active')) closeModal(); if(zenBox && zenBox.classList.contains('visible')) $('#exitZen')?.click(); } });
+
+    /* Channels */
+    const posts = [
+      {title:'Утренний дайджест',img:'https://picsum.photos/seed/1/400/300'},
+      {title:'Дизайн-мышление',img:'https://picsum.photos/seed/2/400/300'},
+      {title:'Технологии',img:'https://picsum.photos/seed/3/400/300'},
+      {title:'Философия общения',img:'https://picsum.photos/seed/4/400/300'},
+    ];
+    const grid = $('#channelGrid');
+    posts.forEach(p=>{
+      const c = document.createElement('div'); c.className='post'; c.setAttribute('tabindex','0');
+      const t = document.createElement('div'); t.style.fontWeight='700'; t.textContent = p.title;
+      const img = document.createElement('img'); img.src = p.img; img.alt = p.title; img.loading='lazy';
+      const meta = document.createElement('div'); meta.className='meta'; meta.textContent = 'Контент как посредник общения';
+      const btnWrap = document.createElement('div'); btnWrap.style.marginTop='6px';
+      const openBtn = document.createElement('button'); openBtn.className='openPost btn ghost'; openBtn.type='button'; openBtn.textContent='Открыть';
+      openBtn.addEventListener('click', ()=>{ alert(p.title + '\n\n"Здесь нет сцены — только поток."'); });
+      openBtn.addEventListener('mouseenter', ()=> showHint('Контент не цель — он посредник общения.', c));
+      openBtn.addEventListener('mouseleave', hideHint);
+      c.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openBtn.click(); } });
+
+      btnWrap.appendChild(openBtn);
+      c.appendChild(t); c.appendChild(img); c.appendChild(meta); c.appendChild(btnWrap);
+      grid.appendChild(c);
+    });
+
+    /* Share popup */
+    $('#shareThoughts')?.addEventListener('click', ()=>{ $('#sharePopup').style.display='block'; $('#shareText').focus(); });
+    $('#cancelShare')?.addEventListener('click', ()=>{ $('#sharePopup').style.display='none'; $('#shareText').value=''; });
+    $('#sendShare')?.addEventListener('click', ()=>{
+      const text = $('#shareText').value.trim();
+      if(text){ alert('Спасибо! Мы получили вашу мысль:\n\n' + text); $('#sharePopup').style.display='none'; $('#shareText').value=''; }
+      else alert('Наберите текст прежде чем отправить.');
+    });
+
+    /* Hide hint on outside click */
+    document.addEventListener('click', (e)=>{
+      if(!e.target.closest('.chat-item') && !e.target.closest('.msg') && !e.target.closest('.post') && !e.target.closest('.openPost')) hideHint();
+    });
+
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Tab') document.body.classList.add('show-focus'); });
+
+    /* initial scroll and select */
+    const intro = document.getElementById('intro');
+    if(intro) intro.scrollIntoView();
+    setTimeout(()=> { const first = document.querySelector('.chat-item'); if(first) first.click(); }, 700);
+
+  </script>
+</body>
+</html>
